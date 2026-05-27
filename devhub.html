@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>// devhub — registro de projetos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.9/purify.min.js"></script>
+<style>
+  :root{
+    --bg:#0c0d0b;
+    --surface:#141613;
+    --surface-2:#1b1e1a;
+    --border:#2a2e27;
+    --border-bright:#3a3f34;
+    --text:#e9ebe4;
+    --muted:#8a8f80;
+    --faint:#5a5f53;
+    --accent:#c5f82a;
+    --accent-dim:#9ec224;
+    --danger:#ff6b5e;
+    --radius:4px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+    line-height:1.6;
+    min-height:100vh;
+    background-image:
+      linear-gradient(var(--border) 1px,transparent 1px),
+      linear-gradient(90deg,var(--border) 1px,transparent 1px);
+    background-size:48px 48px;
+    background-position:-1px -1px;
+    background-attachment:fixed;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(197,248,42,.06),transparent 70%);
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+  /* HEADER */
+  header{padding:48px 0 28px;border-bottom:1px solid var(--border)}
+  .brand{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .brand .slash{color:var(--accent);font-weight:700;font-size:30px}
+  .brand h1{
+    font-family:'Fraunces',serif;font-weight:500;font-size:38px;
+    letter-spacing:-.02em;line-height:1;
+  }
+  .brand .tag{
+    color:var(--faint);font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    border:1px solid var(--border);padding:3px 8px;border-radius:2px;
+  }
+  .sub{color:var(--muted);font-size:13px;margin-top:14px;max-width:620px}
+  .sub b{color:var(--text);font-weight:500}
+
+  /* TOOLBAR */
+  .toolbar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:22px 0}
+  .search{flex:1;min-width:220px;position:relative}
+  .search input{
+    width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);
+    font-family:inherit;font-size:13px;padding:11px 14px 11px 34px;border-radius:var(--radius);
+    transition:border-color .15s;
+  }
+  .search input:focus{outline:none;border-color:var(--accent-dim)}
+  .search .ic{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint)}
+  .stats{display:flex;gap:18px;color:var(--muted);font-size:12px;white-space:nowrap}
+  .stats b{color:var(--accent);font-weight:700}
+  .btn{
+    font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;border-radius:var(--radius);
+    padding:11px 18px;border:1px solid var(--border-bright);background:var(--surface);color:var(--text);
+    transition:all .15s;white-space:nowrap;
+  }
+  .btn:hover{border-color:var(--accent-dim);color:var(--accent)}
+  .btn.primary{background:var(--accent);color:#0c0d0b;border-color:var(--accent);font-weight:700}
+  .btn.primary:hover{background:var(--accent-dim);color:#0c0d0b}
+  .btn.ghost{background:transparent}
+  .btn.sm{padding:7px 12px;font-size:12px}
+  .btn.danger:hover{border-color:var(--danger);color:var(--danger)}
+
+  /* FILTER CHIPS */
+  .chips{display:flex;gap:8px;flex-wrap:wrap;padding-bottom:18px}
+  .chip{
+    font-size:11px;padding:5px 11px;border:1px solid var(--border);border-radius:20px;
+    color:var(--muted);cursor:pointer;transition:all .15s;background:var(--surface)
+  }
+  .chip:hover{border-color:var(--border-bright);color:var(--text)}
+  .chip.active{background:var(--accent);color:#0c0d0b;border-color:var(--accent);font-weight:700}
+
+  /* GRID */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:18px;padding:8px 0 80px}
+  .card{
+    background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+    padding:22px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;
+    transition:border-color .18s,transform .18s;
+  }
+  .card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:transparent;transition:background .18s}
+  .card:hover{border-color:var(--border-bright);transform:translateY(-2px)}
+  .card:hover::before{background:var(--accent)}
+  .card .idx{font-size:11px;color:var(--faint);letter-spacing:.1em}
+  .card h3{font-family:'Fraunces',serif;font-weight:500;font-size:22px;letter-spacing:-.01em;line-height:1.15}
+  .card .summary{color:var(--muted);font-size:12.5px;line-height:1.55;flex:1}
+  .card .owner{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text)}
+  .card .owner .dot{width:7px;height:7px;border-radius:50%;background:var(--accent)}
+  .card .tags{display:flex;gap:6px;flex-wrap:wrap}
+  .card .t{font-size:10.5px;color:var(--accent-dim);border:1px solid var(--border);padding:2px 7px;border-radius:2px}
+  .card .foot{display:flex;gap:8px;border-top:1px solid var(--border);padding-top:14px;margin-top:2px}
+  .card .foot a,.card .foot button{
+    flex:1;text-align:center;text-decoration:none;font-family:inherit;font-size:11.5px;cursor:pointer;
+    padding:8px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2);
+    color:var(--text);transition:all .15s
+  }
+  .card .foot a:hover,.card .foot button:hover{border-color:var(--accent-dim);color:var(--accent)}
+
+  /* EMPTY */
+  .empty{text-align:center;padding:80px 20px;color:var(--muted)}
+  .empty .big{font-family:'Fraunces',serif;font-size:26px;color:var(--text);margin-bottom:8px}
+  .empty p{font-size:13px;margin-bottom:22px}
+
+  /* MODAL */
+  .overlay{
+    position:fixed;inset:0;background:rgba(6,7,5,.78);backdrop-filter:blur(3px);z-index:50;
+    display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto
+  }
+  .overlay.show{display:flex}
+  .modal{
+    background:var(--surface);border:1px solid var(--border-bright);border-radius:6px;
+    width:100%;max-width:680px;margin:auto;animation:pop .2s ease
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--border)}
+  .modal-head h2{font-family:'Fraunces',serif;font-weight:500;font-size:22px}
+  .modal-head .x{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
+  .modal-head .x:hover{color:var(--text)}
+  .modal-body{padding:24px;display:flex;flex-direction:column;gap:16px;max-height:70vh;overflow-y:auto}
+  .field label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+  .field input,.field textarea{
+    width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);
+    font-family:inherit;font-size:13px;padding:10px 12px;border-radius:var(--radius);resize:vertical
+  }
+  .field input:focus,.field textarea:focus{outline:none;border-color:var(--accent-dim)}
+  .field textarea{min-height:160px;line-height:1.55}
+  .field .hint{font-size:11px;color:var(--faint);margin-top:5px}
+  .modal-foot{padding:18px 24px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+
+  /* DOC VIEW */
+  .doc-overlay{position:fixed;inset:0;background:var(--bg);z-index:60;display:none;overflow-y:auto}
+  .doc-overlay.show{display:block}
+  .doc-bar{
+    position:sticky;top:0;background:rgba(12,13,11,.9);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);padding:16px 0;z-index:2
+  }
+  .doc-bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px}
+  .doc-bar .meta{display:flex;align-items:center;gap:12px;min-width:0}
+  .doc-bar h2{font-family:'Fraunces',serif;font-weight:500;font-size:22px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .doc-bar .actions{display:flex;gap:10px}
+  .doc-content{max-width:820px;margin:0 auto;padding:42px 24px 100px}
+  .md{font-size:15px;line-height:1.75;color:var(--text)}
+  .md h1,.md h2,.md h3{font-family:'Fraunces',serif;font-weight:600;letter-spacing:-.01em;line-height:1.25;margin:1.6em 0 .6em}
+  .md h1{font-size:32px;border-bottom:1px solid var(--border);padding-bottom:.3em}
+  .md h2{font-size:25px}
+  .md h3{font-size:19px}
+  .md p{margin:.9em 0}
+  .md a{color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+  .md code{background:var(--surface-2);border:1px solid var(--border);padding:2px 6px;border-radius:3px;font-size:.88em}
+  .md pre{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;overflow-x:auto;margin:1.2em 0}
+  .md pre code{background:none;border:none;padding:0;font-size:13px;line-height:1.6}
+  .md ul,.md ol{margin:.9em 0;padding-left:1.5em}
+  .md li{margin:.35em 0}
+  .md blockquote{border-left:3px solid var(--accent);padding-left:16px;color:var(--muted);margin:1.2em 0;font-style:italic}
+  .md table{border-collapse:collapse;width:100%;margin:1.2em 0;font-size:13px}
+  .md th,.md td{border:1px solid var(--border);padding:8px 12px;text-align:left}
+  .md th{background:var(--surface-2);font-weight:700}
+  .md hr{border:none;border-top:1px solid var(--border);margin:2em 0}
+  .md img{max-width:100%;border-radius:var(--radius)}
+
+  .toast{
+    position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);
+    background:var(--accent);color:#0c0d0b;font-weight:700;font-size:13px;padding:12px 22px;
+    border-radius:var(--radius);z-index:100;opacity:0;transition:all .25s
+  }
+  .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+  @media(max-width:600px){
+    .brand h1{font-size:30px}
+    .grid{grid-template-columns:1fr}
+    .wrap{padding:0 16px}
+    .stats{width:100%;justify-content:flex-start;margin-top:4px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <span class="slash">//</span>
+      <h1>devhub</h1>
+      <span class="tag">registro de projetos</span>
+    </div>
+    <p class="sub">Hub interno da equipe. Cada projeto entregue vira um registro com <b>link do repositório</b> + <b>documentação em Markdown</b>. Fim da dívida de documentação.</p>
+  </header>
+
+  <div class="toolbar">
+    <div class="search">
+      <span class="ic">⌕</span>
+      <input id="search" type="text" placeholder="buscar por projeto, dev ou tag...">
+    </div>
+    <div class="stats">
+      <span><b id="stat-proj">0</b> projetos</span>
+      <span><b id="stat-dev">0</b> devs</span>
+    </div>
+    <button class="btn primary" onclick="openForm()">+ novo projeto</button>
+  </div>
+
+  <div class="chips" id="chips"></div>
+
+  <div id="grid" class="grid"></div>
+</div>
+
+<!-- FORM MODAL -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="form-title">novo projeto</h2>
+      <button class="x" onclick="closeForm()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="f-id">
+      <div class="field">
+        <label>nome do projeto *</label>
+        <input id="f-name" type="text" placeholder="ex: API de Agendamento">
+      </div>
+      <div class="field">
+        <label>resumo</label>
+        <input id="f-summary" type="text" placeholder="uma frase sobre o que o projeto faz">
+      </div>
+      <div class="field">
+        <label>dev responsável</label>
+        <input id="f-owner" type="text" placeholder="ex: Caio Rodrigues">
+      </div>
+      <div class="field">
+        <label>tags / stack (separadas por vírgula)</label>
+        <input id="f-tags" type="text" placeholder="Flask, Supabase, N8n">
+      </div>
+      <div class="field">
+        <label>link do repositório</label>
+        <input id="f-repo" type="text" placeholder="https://github.com/...">
+      </div>
+      <div class="field">
+        <label>documentação (Markdown)</label>
+        <textarea id="f-doc" placeholder="# Visão geral&#10;&#10;## Como rodar&#10;...&#10;&#10;Suporta títulos, listas, tabelas, blocos de código, links."></textarea>
+        <div class="hint">Markdown completo: # títulos, **negrito**, `código`, tabelas, listas etc.</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" onclick="closeForm()">cancelar</button>
+      <button class="btn primary" onclick="saveProject()">salvar projeto</button>
+    </div>
+  </div>
+</div>
+
+<!-- DOC VIEW -->
+<div class="doc-overlay" id="docview">
+  <div class="doc-bar">
+    <div class="wrap">
+      <div class="meta">
+        <button class="btn sm ghost" onclick="closeDoc()">← voltar</button>
+        <h2 id="doc-title"></h2>
+      </div>
+      <div class="actions">
+        <a id="doc-repo" class="btn sm" href="#" target="_blank" rel="noopener">repositório ↗</a>
+        <button class="btn sm" onclick="editFromDoc()">editar</button>
+      </div>
+    </div>
+  </div>
+  <div class="doc-content"><div id="doc-md" class="md"></div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='devhub:projects';
+const SEED_FLAG='devhub:seeded';
+let projects=[];
+let activeTag=null;
+let currentDocId=null;
+
+const seed=[
+  {id:'s1',name:'API de Agendamento',summary:'Sistema automatizado de agendamento com matching de técnico mais próximo.',owner:'Caio Rodrigues',tags:['Flask','N8n','Google Calendar','Redis'],repo:'https://github.com/exemplo/agendamento-api',doc:`# API de Agendamento\n\nSistema completo de agendamento automatizado para serviços.\n\n## Stack\n- **Backend:** Flask\n- **Orquestração:** N8n\n- **Calendário:** Google Calendar (service account)\n- **WhatsApp:** Z-API\n- **Estado:** Redis (Render)\n\n## Como rodar\n\n\`\`\`bash\npip install -r requirements.txt\nflask run\n\`\`\`\n\n## Endpoints\n\n| Método | Rota | Descrição |\n|--------|------|-----------|\n| POST | /agendar | Cria agendamento |\n| GET | /dashboard-events | Lista eventos |\n\n## Variáveis de ambiente\n\nConfigurar no Render: \`GOOGLE_SA_JSON\`, \`ZAPI_TOKEN\`, \`REDIS_URL\`.`},
+  {id:'s2',name:'Pulse — Inteligência Política',summary:'Plataforma de monitoramento e análise de sentimento para consultoria política.',owner:'Caio Rodrigues',tags:['Flask','Claude API','Apify','Railway'],repo:'https://github.com/exemplo/pulse',doc:`# Pulse\n\nPlataforma de inteligência política — monitoramento de redes e análise de sentimento.\n\n## Arquitetura\n\n- Monitoramento Instagram via **Apify**\n- Análise de sentimento via **Claude Haiku**\n- Busca de mídia via **SerpApi**\n- Backend **Flask** no **Railway**\n\n> Análise em duas camadas: legendas (estilo de comunicação) e comentários (reação da audiência).\n\n## Roadmap\n\n1. Dashboards avançados (timeline, picos, gauge de crise)\n2. Integração Twitter/X\n3. Alertas de crise via WhatsApp/email`}
+];
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2200);
+}
+
+async function load(){
+  try{
+    const seeded=await window.storage.get(SEED_FLAG).catch(()=>null);
+    const res=await window.storage.get(KEY).catch(()=>null);
+    if(res&&res.value){
+      projects=JSON.parse(res.value);
+    }else if(!seeded){
+      projects=seed;
+      await persist();
+      await window.storage.set(SEED_FLAG,'1');
+    }
+  }catch(e){console.error(e);projects=[]}
+  render();
+}
+
+async function persist(){
+  try{await window.storage.set(KEY,JSON.stringify(projects))}
+  catch(e){console.error('save failed',e);showToast('erro ao salvar')}
+}
+
+function allTags(){
+  const s=new Set();projects.forEach(p=>(p.tags||[]).forEach(t=>s.add(t)));
+  return [...s].sort();
+}
+
+function render(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  let list=projects.filter(p=>{
+    const hay=(p.name+' '+(p.summary||'')+' '+(p.owner||'')+' '+(p.tags||[]).join(' ')).toLowerCase();
+    const matchQ=!q||hay.includes(q);
+    const matchTag=!activeTag||(p.tags||[]).includes(activeTag);
+    return matchQ&&matchTag;
+  });
+
+  // stats
+  document.getElementById('stat-proj').textContent=projects.length;
+  document.getElementById('stat-dev').textContent=new Set(projects.map(p=>p.owner).filter(Boolean)).size;
+
+  // chips
+  const chipsEl=document.getElementById('chips');
+  const tags=allTags();
+  chipsEl.innerHTML = tags.length ? tags.map(t=>
+    `<span class="chip ${activeTag===t?'active':''}" onclick="toggleTag('${t.replace(/'/g,"\\'")}')">${esc(t)}</span>`
+  ).join('') : '';
+
+  // grid
+  const grid=document.getElementById('grid');
+  if(!list.length){
+    grid.innerHTML=`<div class="empty" style="grid-column:1/-1">
+      <div class="big">${projects.length?'nenhum projeto encontrado':'hub vazio'}</div>
+      <p>${projects.length?'ajuste a busca ou os filtros.':'adicione o primeiro projeto entregue pela equipe.'}</p>
+      ${projects.length?'':'<button class="btn primary" onclick="openForm()">+ novo projeto</button>'}
+    </div>`;
+    return;
+  }
+  grid.innerHTML=list.map((p,i)=>`
+    <div class="card">
+      <span class="idx">${String(i+1).padStart(2,'0')} / ${String(list.length).padStart(2,'0')}</span>
+      <h3>${esc(p.name)}</h3>
+      ${p.summary?`<div class="summary">${esc(p.summary)}</div>`:'<div class="summary" style="color:var(--faint)">sem resumo</div>'}
+      ${p.owner?`<div class="owner"><span class="dot"></span>${esc(p.owner)}</div>`:''}
+      ${(p.tags&&p.tags.length)?`<div class="tags">${p.tags.map(t=>`<span class="t">${esc(t)}</span>`).join('')}</div>`:''}
+      <div class="foot">
+        <button onclick="openDoc('${p.id}')">📄 documentação</button>
+        ${p.repo?`<a href="${esc(p.repo)}" target="_blank" rel="noopener">repo ↗</a>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+
+function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function toggleTag(t){activeTag=activeTag===t?null:t;render()}
+
+// FORM
+function openForm(){
+  document.getElementById('form-title').textContent='novo projeto';
+  ['f-id','f-name','f-summary','f-owner','f-tags','f-repo','f-doc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('overlay').classList.add('show');
+}
+function openEdit(p){
+  document.getElementById('form-title').textContent='editar projeto';
+  document.getElementById('f-id').value=p.id;
+  document.getElementById('f-name').value=p.name||'';
+  document.getElementById('f-summary').value=p.summary||'';
+  document.getElementById('f-owner').value=p.owner||'';
+  document.getElementById('f-tags').value=(p.tags||[]).join(', ');
+  document.getElementById('f-repo').value=p.repo||'';
+  document.getElementById('f-doc').value=p.doc||'';
+  document.getElementById('overlay').classList.add('show');
+}
+function closeForm(){document.getElementById('overlay').classList.remove('show')}
+
+async function saveProject(){
+  const name=document.getElementById('f-name').value.trim();
+  if(!name){showToast('nome é obrigatório');return}
+  const id=document.getElementById('f-id').value;
+  const data={
+    name,
+    summary:document.getElementById('f-summary').value.trim(),
+    owner:document.getElementById('f-owner').value.trim(),
+    tags:document.getElementById('f-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    repo:document.getElementById('f-repo').value.trim(),
+    doc:document.getElementById('f-doc').value
+  };
+  if(id){
+    const idx=projects.findIndex(p=>p.id===id);
+    if(idx>-1)projects[idx]={...projects[idx],...data};
+  }else{
+    projects.unshift({id:'p'+Date.now(),...data});
+  }
+  await persist();
+  closeForm();render();showToast('projeto salvo');
+}
+
+async function deleteProject(id){
+  if(!confirm('Remover este projeto do hub?'))return;
+  projects=projects.filter(p=>p.id!==id);
+  await persist();render();showToast('projeto removido');
+}
+
+// DOC VIEW
+function openDoc(id){
+  const p=projects.find(x=>x.id===id);if(!p)return;
+  currentDocId=id;
+  document.getElementById('doc-title').textContent=p.name;
+  const repoBtn=document.getElementById('doc-repo');
+  if(p.repo){repoBtn.style.display='';repoBtn.href=p.repo}else{repoBtn.style.display='none'}
+  const raw=p.doc&&p.doc.trim()?p.doc:'_Sem documentação ainda. Clique em **editar** para adicionar._';
+  document.getElementById('doc-md').innerHTML=DOMPurify.sanitize(marked.parse(raw));
+  document.getElementById('docview').classList.add('show');
+  window.scrollTo(0,0);
+}
+function closeDoc(){document.getElementById('docview').classList.remove('show');currentDocId=null}
+function editFromDoc(){
+  const p=projects.find(x=>x.id===currentDocId);if(!p)return;
+  closeDoc();openEdit(p);
+}
+
+document.getElementById('search').addEventListener('input',render);
+document.getElementById('overlay').addEventListener('click',e=>{if(e.target.id==='overlay')closeForm()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeForm();if(document.getElementById('docview').classList.contains('show'))closeDoc()}});
+
+marked.setOptions({breaks:true,gfm:true});
+load();
+</script>
+</body>
+</html>
