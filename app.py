@@ -16,7 +16,7 @@ API_TOKEN    = os.environ["API_TOKEN"]              # token de escrita da equipe
 ALLOWED_ORIGIN = os.environ.get("ALLOWED_ORIGIN", "*")  # ex: https://seu-hub.vercel.app
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-TABLE = "projects"
+TABLE = "devhub_projects"
 
 app = Flask(__name__)
 CORS(app, origins="*" if ALLOWED_ORIGIN == "*" else [ALLOWED_ORIGIN])
